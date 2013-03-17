@@ -1,4 +1,6 @@
-import cherrypy, ofxmate, os.path
+import cherrypy, os.path
+from ofxclient import Institution, Account, OfxConfig
+from ofxhome import OFXHome
 from mako.template import Template
 from mako.lookup import TemplateLookup
 try:
@@ -16,13 +18,15 @@ lookup = TemplateLookup(directories=[html_dir])
 def _t(name,**kwargs):
     return lookup.get_template(name).render(**kwargs)
 
+GlobalConfig = OfxConfig()
+
 class REST(object):
 
     @cherrypy.expose
     def accounts(self):
         cherrypy.response.headers['Content-Type'] = 'application/json'
         cherrypy.response.status = 200
-        return json.dumps([ a.__json__() for a in ofxmate.Account.list() ])
+        return json.dumps([ a.serialize() for a in GlobalConfig.accounts() ])
 
     @cherrypy.expose
     def add_bank(self,id=None,username=None,password=None):
@@ -35,16 +39,25 @@ class REST(object):
             'message': ''
         }
         if id and username and password:
-            i = ofxmate.Institution.from_ofxhome_id(id)
-            i.username = username
-            i.password = password
+            bank = OFXHome.lookup(id)
+            i = Institution(
+                    id = bank['fid'],
+                    org = bank['org'],
+                    url = bank['url'],
+                    broker_id = bank['brokerid'],
+                    description = bank['name'],
+                    username = username,
+                    password = password
+            )
             try:
                 i.authenticate()
             except Exception as e:
                 result['status'] = 'error'
                 result['message'] = 'unable to log into bank with those credentials'
 
-            i.save()
+            for a in i.accounts():
+                GlobalConfig.add_account(a)
+            GlobalConfig.save()
         else:
             result['status'] = 'error'
             result['message'] = 'id, username, and password are all required'
@@ -58,12 +71,12 @@ class REST(object):
 class Root(object):
     @cherrypy.expose
     def index(self):
-        banks = sorted(ofxmate.Institution.list())
-        return _t('index.html',banks=banks)
+        accounts = GlobalConfig.accounts()
+        return _t('index.html',accounts=accounts)
 
     @cherrypy.expose
     def download(self,account_id,filename_arbitrary,days=60):
-        account = ofxmate.Account.from_id(account_id)
+        account = GlobalConfig.account(account_id)
         cherrypy.response.headers['Content-Type'] = 'application/vnd.intu.QFX'
         cherrypy.lib.caching.expires(secs=0,force=True)
         return account.download(days=int(days)).read()
@@ -71,25 +84,16 @@ class Root(object):
     @cherrypy.expose
     def search(self,q=None,**kwargs):
         if q:
-            institutions = sorted(ofxmate.Institution.search(q))
+            found = OFXHome.search(q)
         else:
-            institutions = []
-        return _t('search.html',institutions=institutions,q=q)
+            found = []
+        return _t('search.html',institutions=found,q=q)
 
     @cherrypy.expose
     def delete_account(self,id=None):
         try:
-            a = ofxmate.Account.from_id(id)
-            a.delete()
-        except:
-            pass
-        raise cherrypy.HTTPRedirect("/")
-
-    @cherrypy.expose
-    def delete_bank(self,id=None):
-        try:
-            i = ofxmate.Institution.from_id(id)
-            i.delete()
+            GlobalConfig.remove_account(id)
+            GlobalConfig.save()
         except:
             pass
         raise cherrypy.HTTPRedirect("/")

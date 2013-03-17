@@ -88,11 +88,10 @@ setup(name='ofxmate',
       },
       install_requires=[
           "ofxhome",
-          "ofxclient>=1.0",
+          "ofxclient>=1.3.1",
           "simplejson",
           "cherrypy",
           "mako",
-          "keyring"
       ],
       test_suite='tests',
       )

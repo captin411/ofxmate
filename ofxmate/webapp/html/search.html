@@ -106,7 +106,7 @@
 <%namespace name="search_box" file="search_box.html"/>
 <div class="results">
 % for i in institutions:
-    <button><span class="description">${i.description}</span><span class="guid">${i.ofxhome_id}</span></button>
+    <button><span class="description">${i['name']}</span><span class="guid">${i['id']}</span></button>
 % endfor
 </div>
 % if not institutions:

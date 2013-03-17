@@ -32,7 +32,7 @@ Windows
 
 > easy_install ofxmate
 
-Note: Make sure %PYTHON_HOME%\Scripts is added to your %PATH% otherwise the 'ofxmated' command will not be found on your path.
+Note: Make sure %PYTHON_HOME%\Scripts is added to your %PATH% otherwise the 'ofxmate' command will not be found on your path.
 
 Source
 ------

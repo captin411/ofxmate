@@ -56,32 +56,19 @@
         $('.actions a.add').button({ icons: {primary:'ui-icon-plusthick'} })
     });
 </script>
-% for b in banks:
-<div class="bank ui-widget">
-    <div class="ui-widget-header ui-corner-top ui-corner-bl">
-        ${b.description}
-        <div class="actions">
-            <a href="/delete_bank?id=${b.local_id()}" class="delete">Delete</a>
-        </div>
-    </div>
     <div class="ui-widget-content ui-corner-bottom">
-    % for a in b.accounts():
-        <% name = a.description %>
+    % for a in accounts:
+        <% name = a.long_description() %>
         <% today = time.strftime('%Y-%m-%d_%H_%M_%S') %>
         <% url = "/download/%s/%s_%s.ofx" % (a.local_id(),name,today) %>
+        <% type = str(a.__class__) %>
         <div class="account">
             <div class="text">
             <span class="name">
                 ${name}
             </span><br/>
             <span class="type">
-                % if a.is_bank_account():
-                    Bank Account
-                % elif a.is_brokerage_account():
-                    Brokerage Account
-                % elif a.is_credit_card_account():
-                    Credit Card Account
-                % endif
+                ${type}
             </span>
             </div>
             <div class="actions">
@@ -96,9 +83,7 @@
         </div>
     % endfor
     </div>
-</div>
-% endfor
-% if not banks:
+% if not accounts:
 ${search_box.form(error='No financial institution have been configured yet')}
 % else:
 <div class="actions">

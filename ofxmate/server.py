@@ -1,4 +1,4 @@
-import cherrypy, ofxmate.webapp, webbrowser, threading, getopt, sys
+import cherrypy, webapp, webbrowser, threading, getopt, sys
 
 def browser(url):
     webbrowser.open(url, new=1, autoraise=True)
@@ -17,11 +17,11 @@ def server(host='127.0.0.1',port='8080',verbose=False,open_browser=True,quiet=Fa
             'log.screen': l2s
         },
         '/': {
-            'tools.staticdir.root': ofxmate.webapp.html_dir
+            'tools.staticdir.root': webapp.html_dir
         },
         '/favicon.ico': {
             'tools.staticfile.on': True,
-            'tools.staticfile.filename': ofxmate.webapp.html_dir + '/favicon.ico'
+            'tools.staticfile.filename': webapp.html_dir + '/favicon.ico'
         },
         '/static': {
             'tools.staticdir.on': True,
@@ -37,7 +37,7 @@ def server(host='127.0.0.1',port='8080',verbose=False,open_browser=True,quiet=Fa
     if open_browser:
         browser_open = threading.Timer(1.0,browser,args=[ url ])
         browser_open.start()
-    cherrypy.quickstart(ofxmate.webapp.Root(),config=config)
+    cherrypy.quickstart(webapp.Root(),config=config)
 
 def cmdline():
 
@@ -60,3 +60,6 @@ def cmdline():
             open_browser = False
 
     server(host=host,port=port,verbose=verbose,open_browser=open_browser)
+
+if __name__ == '__main__':
+    cmdline()
