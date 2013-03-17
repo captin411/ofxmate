@@ -2,7 +2,10 @@ import objc
 from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
-import ofxmate.server, webbrowser, ofxmate, os, ofxmate.settings, time
+import ofxmate.server, webbrowser, ofxmate, os, time
+from ofxclient import OfxConfig
+
+GlobalConfig = OfxConfig()
 
 class MyApp(NSApplication):
 
@@ -29,7 +32,7 @@ class MyApp(NSApplication):
     def configWatcher(self):
         lastRefresh = None
         while 1:
-            modifiedOn = os.stat(ofxmate.settings.CONFFILE).st_mtime
+            modifiedOn = os.stat(GlobalConfig.file_name).st_mtime
             if lastRefresh is None or modifiedOn > lastRefresh:
                 lastRefresh = modifiedOn
                 self.updateMenu()
@@ -37,6 +40,8 @@ class MyApp(NSApplication):
 
 
     def updateMenu(self):
+        global GlobalConfig
+        GlobalConfig = OfxConfig()
         self.statusitem.setMenu_(None)
         self.statusitem.setMenu_(self.makeMenu())
 
@@ -44,7 +49,7 @@ class MyApp(NSApplication):
         #make the menu
         menubarMenu = NSMenu.alloc().init()
 
-        unsorted = ofxmate.Account.list()
+        unsorted = GlobalConfig.accounts()
         accounts = sorted(unsorted,key=lambda a: str(a.long_description()).lower())
 
         accountsMain = NSMenuItem.alloc().init()
@@ -65,6 +70,9 @@ class MyApp(NSApplication):
                 item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(a.long_description(),'download:','')
                 item.setRepresentedObject_(a.local_id())
                 accountsSubMenu.addItem_(item)
+            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("All accounts combined",'download:','')
+            item.setRepresentedObject_('combined')
+            accountsSubMenu.addItem_(item)
             accountsMain.setSubmenu_(accountsSubMenu)
 
         menubarMenu.addItem_(accountsMain)
@@ -88,7 +96,7 @@ class MyApp(NSApplication):
 
     def download_(self, sender):
         guid = sender._.representedObject
-        webbrowser.open('http://localhost:8080/download/%s/transactions.ofx?days=10' % guid)
+        webbrowser.open('http://localhost:8080/download/%s/transactions.ofx?days=30' % guid)
 
     def open_(self, notification):
         webbrowser.open('http://localhost:8080', new=1, autoraise=True)

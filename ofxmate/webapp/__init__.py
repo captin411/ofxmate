@@ -1,5 +1,6 @@
 import cherrypy, os.path
 from ofxclient import Institution, Account, OfxConfig
+from ofxclient.util import combined_download
 from ofxhome import OFXHome
 from mako.template import Template
 from mako.lookup import TemplateLookup
@@ -76,10 +77,16 @@ class Root(object):
 
     @cherrypy.expose
     def download(self,account_id,filename_arbitrary,days=60):
-        account = GlobalConfig.account(account_id)
+        downloaded = None
+        if account_id == 'combined':
+            accounts = GlobalConfig.accounts()
+            downloaded = combined_download(accounts,days=int(days))
+        else:
+            account    = GlobalConfig.account(account_id)
+            downloaded = account.download(days=int(days))
         cherrypy.response.headers['Content-Type'] = 'application/vnd.intu.QFX'
         cherrypy.lib.caching.expires(secs=0,force=True)
-        return account.download(days=int(days)).read()
+        return downloaded.read()
 
     @cherrypy.expose
     def search(self,q=None,**kwargs):
