@@ -3,7 +3,10 @@ from Foundation import *
 from AppKit import *
 from PyObjCTools import AppHelper
 import ofxmate.server, webbrowser, ofxmate, os, time
-from ofxclient import OfxConfig
+from ofxclient.config import OfxConfig
+from ofxclient.util import combined_download
+from ofxclient.cli import open_with_ofx_handler
+import os.path
 
 GlobalConfig = OfxConfig()
 
@@ -96,10 +99,20 @@ class MyApp(NSApplication):
 
     def download_(self, sender):
         guid = sender._.representedObject
-        webbrowser.open('http://localhost:8080/download/%s/transactions.ofx?days=30' % guid)
+
+        outfile = open( os.path.expanduser( os.path.join('~', 'Downloads', 'ofxclient_%s.ofx' % guid) ), 'w' )
+        if guid == 'combined':
+            accounts = GlobalConfig.accounts()
+            ofxdata = combined_download(accounts, days=30)
+        else:
+            account = GlobalConfig.account(guid)
+            ofxdata = account.download(days=30)
+        outfile.write(ofxdata.read())
+        outfile.close()
+        open_with_ofx_handler(outfile.name)
 
     def open_(self, notification):
-        webbrowser.open('http://localhost:8080', new=1, autoraise=True)
+        webbrowser.open('http://localhost:8899', new=1, autoraise=True)
 
 
 if __name__ == "__main__":

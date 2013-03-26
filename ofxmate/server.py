@@ -3,7 +3,7 @@ import cherrypy, webapp, webbrowser, threading, getopt, sys
 def browser(url):
     webbrowser.open(url, new=1, autoraise=True)
 
-def server(host='127.0.0.1',port='8080',verbose=False,open_browser=True,quiet=False):
+def server(host='127.0.0.1',port='8899',verbose=False,open_browser=True,quiet=False):
 
     mode = 'development' if verbose else ''
     l2s  = True if verbose else False
@@ -44,7 +44,7 @@ def cmdline():
     args = sys.argv[1:]
 
     host = '127.0.0.1'
-    port = '8080'
+    port = '8899'
     open_browser = True
     verbose = False
 

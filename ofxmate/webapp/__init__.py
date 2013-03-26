@@ -1,5 +1,6 @@
 import cherrypy, os.path
-from ofxclient import Institution, Account, OfxConfig
+from ofxclient import Institution, Account
+from ofxclient.config import OfxConfig
 from ofxclient.util import combined_download
 from ofxhome import OFXHome
 from mako.template import Template
